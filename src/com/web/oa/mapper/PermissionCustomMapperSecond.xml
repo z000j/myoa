@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.web.oa.mapper.PermissionCustomMapperSecond" >
+
+  <resultMap id="MenuListResultMap" type="com.web.oa.pojo.TreeMenu">
+    <id column="id" property="id"/>
+    <result column="name" property="name"/>
+    <collection property="children"
+                select="com.web.oa.mapper.PermissionCustomMapperSecond.getSubMenuSecond"
+                column="id">
+      <id column="id" property="id" jdbcType="BIGINT" />
+      <result column="name" property="name" jdbcType="VARCHAR" />
+      <result column="type" property="type" jdbcType="VARCHAR" />
+      <result column="url" property="url" jdbcType="VARCHAR" />
+      <result column="percode" property="percode" jdbcType="VARCHAR" />
+      <result column="parentid" property="parentid" jdbcType="BIGINT" />
+      <result column="parentids" property="parentids" jdbcType="VARCHAR" />
+      <result column="sortstring" property="sortstring" jdbcType="VARCHAR" />
+      <result column="available" property="available" jdbcType="CHAR" />
+    </collection>
+  </resultMap>
+
+  <select id="findAllPermission" resultMap="MenuListResultMap">
+    select * from sys_permission where parentid=1
+  </select>
+  
+  <select id="getSubMenuSecond" resultType="com.web.oa.pojo.Permission" parameterType="int">
+    select * from sys_permission where parentid=#{id} and type like '%permission%'
+  </select>
+</mapper>

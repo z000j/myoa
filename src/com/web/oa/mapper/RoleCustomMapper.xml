@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.web.oa.mapper.RoleCustomMapper" >
+
+  <resultMap id="rolePermissionMap" type="com.web.oa.pojo.Role">
+    <id column="r_id" property="id" jdbcType="VARCHAR" />
+    <result column="r_name" property="name" jdbcType="VARCHAR" />
+    <result column="r_available" property="available" jdbcType="CHAR" />
+    <collection property="permissionList" ofType="com.web.oa.pojo.Permission">
+      <id column="id" property="id" jdbcType="BIGINT" />
+      <result column="name" property="name" jdbcType="VARCHAR" />
+      <result column="type" property="type" jdbcType="VARCHAR" />
+      <result column="url" property="url" jdbcType="VARCHAR" />
+      <result column="percode" property="percode" jdbcType="VARCHAR" />
+      <result column="parentid" property="parentid" jdbcType="BIGINT" />
+      <result column="parentids" property="parentids" jdbcType="VARCHAR" />
+      <result column="sortstring" property="sortstring" jdbcType="VARCHAR" />
+      <result column="available" property="available" jdbcType="CHAR" />
+    </collection>
+  </resultMap>
+
+  <select id="findRoleContainPermission" resultMap="rolePermissionMap" parameterType="String">
+   SELECT r.id r_id,r.name r_name,r.available r_available,sp.* FROM employee e
+    INNER JOIN sys_role r ON e.role=r.id
+    INNER JOIN sys_role_permission srp ON r.id=srp.sys_role_id
+    INNER JOIN sys_permission sp ON srp.sys_permission_id=sp.id
+    WHERE e.name=#{username}
+  </select>
+
+    <select id="findRolePermission" resultType="com.web.oa.pojo.Permission" parameterType="String">
+        SELECT * FROM sys_permission WHERE id in(
+        SELECT srp.sys_permission_id FROM sys_role_permission srp
+        WHERE srp.sys_role_id=#{roleID});
+    </select>
+</mapper>

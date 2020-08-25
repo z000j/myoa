@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.web.oa.mapper.UserCustomMapper" >
+
+    <select id="findUserContainLeader" resultType="com.web.oa.pojo.User">
+        SELECT e2.*,e1.`name` manager,r.`name` roleName
+        from employee e1,employee e2,sys_role r
+        WHERE e1.id=e2.manager_id and e2.role=r.id order by e2.id;
+    </select>
+    <select id="findUserByRole" resultType="com.web.oa.pojo.User" parameterType="int">
+       SELECT * FROM employee WHERE level >
+        (SELECT DISTINCT level FROM employee WHERE role=#{level})
+    </select>
+</mapper>

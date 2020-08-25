@@ -1,0 +1,118 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd 
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd 
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-3.2.xsd 
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop-3.2.xsd 
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-3.2.xsd ">
+	
+	<!-- 开启aop，对类代理 -->
+	<aop:config proxy-target-class="true"></aop:config>
+	<!-- 开启shiro注解支持 -->
+	<bean  class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+		<property name="securityManager" ref="securityManager" />
+	</bean>
+
+	<!-- web.xml中shiro的filter对应的bean -->
+	<!-- Shiro 的Web过滤器 -->
+	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+		<property name="securityManager" ref="securityManager" />
+		<!-- loginUrl认证提交地址，如果没有认证将会请求此地址进行认证，请求此地址将由formAuthenticationFilter进行表单认证 -->
+		<property name="loginUrl" value="/login" />
+		<!-- 认证成功统一跳转到first.action，建议不配置，shiro认证成功自动到上一个请求路径 -->
+		<property name="successUrl" value="/index" />
+		<!-- 通过unauthorizedUrl指定没有权限操作时跳转页面 -->
+		<property name="unauthorizedUrl" value="/refuse" />
+		<!-- 自定义filter配置 -->
+		<property name="filters">
+			<map>
+				<!-- 将自定义 的FormAuthenticationFilter注入shiroFilter中-->
+				<entry key="authc" value-ref="formAuthenticationFilter" />
+			</map>
+		</property>
+
+		<!-- 过虑器链定义，从上向下顺序执行，一般将/**放在最下边 -->
+		<property name="filterChainDefinitions">
+			<value>
+			    <!-- 所有的静态资源要匿名访问
+			     	 匿名访问就是没有登录也能访问	-->
+			    /js/**=anon
+			    /images/**=anon
+			    /styles/**=anon
+				/static/**=anon
+				/bootstrap/**=anon
+				<!-- 验证码 -->
+				/validateCode=anon
+				<!-- 权限 -->
+				/apply_baoxiao.jsp=perms[baoxiao:apply]
+				/myBaoxiaoBill=perms[baoxiao:billquery]
+				/myTaskList=perms[baoxiao:tasklist]
+				/add_process.jsp=perms[baoxiao:publish]
+				/processDefinitionList=perms[baoxiao:processlist]
+				/findUserList=perms[user:query]
+				/toAddRole=perms[user:create]
+<!--				/delDeployment=perms[baoxiao:remove]-->
+<!--				/viewImage=perms[baoxiao:viewimage]-->
+				/findRoles=perms[baoxiao:rolelist]
+				/index=user
+				/welcome.html=user
+				/logout=logout
+				/**=authc
+			</value>
+		</property>
+	</bean>
+
+	<!-- securityManager安全管理器 -->
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+		<property name="realm" ref="customRealm" />
+		<property name="rememberMeManager" ref="rememberMeManager"/>
+<!--		<property name="cacheManager" ref="cacheManager"/>-->
+	</bean>
+
+	<!-- realm -->
+	<bean id="customRealm" class="com.web.oa.shiro.CustomRealm">
+		<!-- 将凭证匹配器设置到realm中，realm按照凭证匹配器的要求进行散列 -->
+		<property name="credentialsMatcher" ref="credentialsMatcher" />
+	</bean>
+
+	<!-- 凭证匹配器 -->
+	<bean id="credentialsMatcher"
+		  class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+		<property name="hashAlgorithmName" value="md5" />
+		<property name="hashIterations" value="2" />
+	</bean>
+
+<!--	&lt;!&ndash; 缓存管理器 &ndash;&gt;-->
+<!--	<bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">-->
+<!--		<property name="cacheManagerConfigFile" value="classpath:shiro-ehcache.xml"/>-->
+<!--	</bean>-->
+
+	<!-- 自定义form认证过虑器 -->
+	<!-- 基于Form表单的身份验证过滤器，不配置将也会注册此过虑器，表单中的用户账号、密码及loginurl将采用默认值，建议配置 -->
+	<bean id="formAuthenticationFilter" class="com.web.oa.shiro.CustomFormAuthenticationFilter">
+		<!-- 表单中账号的input名称 -->
+		<property name="usernameParam" value="username" />
+		<!-- 表单中密码的input名称 -->
+		<property name="passwordParam" value="password" />
+	</bean>
+
+	<!-- rememberMeManager管理器，写cookie，取出cookie生成用户信息 -->
+	<bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+		<property name="cookie" ref="rememberMeCookie" />
+	</bean>
+	<!-- 记住我cookie -->
+	<bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+		<!-- rememberMe是cookie的名字 -->
+		<constructor-arg value="rememberMe" />
+		<!-- 记住我cookie生效时间30天 -->
+		<property name="maxAge" value="2592000" />
+	</bean>
+
+</beans>
